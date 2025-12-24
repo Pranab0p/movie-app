@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Movieibe - TEST</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* BASE STYLES */
+        body { background-color: #000; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        
+        /* EXACT OLD BOXY GLASS HEADER STYLE */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* NAVIGATION LINKS (No Underline) */
+        .nav-link {
+            color: rgba(156, 163, 175, 1); /* text-gray-400 */
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link.active, .nav-link:hover {
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* CARD HOVER & SHEEN */
+        .apple-card {
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative; overflow: hidden;
+        }
+        .apple-card:hover {
+            transform: scale(1.05); box-shadow: 0 20px 40px rgba(0,0,0,0.0);
+            border-color: rgba(255, 255, 255, 0.5); z-index: 20;
+        }
+        .apple-card::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent);
+            transform: skewX(-25deg); transition: 0.5s;
+        }
+        .apple-card:hover::after { left: 150%; transition: 0.7s ease-in-out; }
+
+        /* FADE IN ANIMATION */
+        .fade-active { opacity: 1; transform: translateY(0); transition: all 0.8s ease-out; }
+
+        /* --- MOBILE HEADER EXACT UI FIX --- */
+        @media (max-width: 768px) {
+            .mobile-header-custom {
+                background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+                padding-top: env(safe-area-inset-top);
+            }
+            .nav-link-mob {
+                color: #fff;
+                font-weight: 600;
+                font-size: 15px;
+                opacity: 0.8;
+            }
+            .nav-link-mob.active {
+                opacity: 1;
+                border-bottom: 2px solid white;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="fixed top-4 left-1/2 transform -translate-x-1/2 w-[95%] max-w-7xl z-50 glass-panel rounded-2xl px-6 py-3 flex justify-between items-center shadow-2xl transition-all duration-300 hidden md:flex">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="renderApp('all')">
+            <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                <i class="fas fa-play text-black text-xs"></i>
+            </div>
+            <h1 class="text-xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">MovieVibe</h1>
+        </div>
+        
+        <div class="flex items-center gap-8 text-sm font-medium">
+            <button onclick="renderApp('all')" class="nav-link active" id="btn-all">Home</button>
+            <button onclick="renderApp('movie')" class="nav-link" id="btn-movie">Movies</button>
+            <button onclick="renderApp('series')" class="nav-link" id="btn-series">Web Series</button>
+            <button onclick="renderApp('Anime')" class="nav-link" id="btn-Anime">Anime</button>
+            <button onclick="renderApp('K-Drama')" class="nav-link" id="btn-K-Drama">K-Drama</button>
+        </div>
+
+        <div class="relative">
+            <div class="relative group z-50">
+                <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 group-focus-within:text-white transition"></i>
+                <input type="text" id="search-desk" placeholder="Search..." autocomplete="off"
+                    class="bg-white/10 border border-white/10 rounded-xl py-2 pl-10 pr-4 w-32 focus:w-64 transition-all duration-500 focus:outline-none focus:bg-black/80 text-sm backdrop-blur-md text-white"
+                    oninput="showSuggestions(this.value)">
+            </div>
+            <div id="suggestion-box-desk" class="absolute top-14 right-0 w-72 glass-panel rounded-xl hidden overflow-hidden flex-col shadow-2xl z-40 bg-black/90 border border-white/10"></div>
+        </div>
+    </nav>
+
+    <div class="md:hidden fixed top-0 left-0 w-full z-50 mobile-header-custom">
+        <div class="flex justify-between items-center px-6 py-5">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-lg"><i class="fas fa-play text-black text-[10px]"></i></div>
+                <h1 class="text-xl font-bold text-white tracking-tight">MovieVibe</h1>
+            </div>
+            <button onclick="document.getElementById('mob-search-container').classList.toggle('hidden')" class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10">
+                <i class="fas fa-search text-white text-sm"></i>
+            </button>
+        </div>
+        
+        <div class="flex gap-6 overflow-x-auto hide-scroll px-6 pb-3">
+            <button onclick="renderApp('all')" id="mob-btn-all" class="nav-link whitespace-nowrap text-sm font-semibold">Home</button>
+            <button onclick="renderApp('movie')" id="mob-btn-movie" class="nav-link whitespace-nowrap text-sm font-semibold">Movies</button>
+            <button onclick="renderApp('series')" id="mob-btn-series" class="nav-link whitespace-nowrap text-sm font-semibold">Series</button>
+            <button onclick="renderApp('Anime')" id="mob-btn-Anime" class="nav-link whitespace-nowrap text-sm font-semibold">Anime</button>
+            <button onclick="renderApp('K-Drama')" id="mob-btn-K-Drama" class="nav-link whitespace-nowrap text-sm font-semibold">K-Drama</button>
+        </div>
+
+        <div id="mob-search-container" class="hidden px-6 pb-4">
+            <div class="relative">
+                <input type="text" placeholder="Search..." oninput="showSuggestions(this.value)"
+                    class="w-full bg-black/40 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm outline-none text-white backdrop-blur-md">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-500"></i>
+                <div id="suggestion-box-mob" class="absolute top-12 left-0 w-full glass-panel rounded-xl hidden flex-col shadow-2xl z-50 overflow-hidden bg-black/95"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="hero" class="relative h-[85vh] w-full bg-cover bg-center transition-all duration-700 flex items-end pb-24 mt-0">
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-transparent"></div>
+        <div class="relative z-10 px-6 md:px-16 max-w-4xl">
+            <div id="hero-content" class="fade-active">
+                <span id="hero-tag" class="bg-white/20 backdrop-blur-md text-[10px] font-bold px-3 py-1 rounded-md border border-white/10 text-white uppercase tracking-widest mb-4 inline-block">Featured Content</span>
+                <h1 id="hero-title" class="text-4xl md:text-7xl font-bold mb-4 leading-tight text-white drop-shadow-2xl">Loading...</h1>
+                <p id="hero-desc" class="text-sm md:text-lg text-gray-200 mb-8 line-clamp-3 md:w-3/4 drop-shadow-md font-light leading-relaxed"></p>
+                <div class="flex gap-4">
+                    <button id="hero-play" class="bg-white text-black px-8 py-3.5 rounded-xl font-bold hover:scale-105 transition shadow-xl flex items-center gap-2">
+                        <i class="fas fa-play"></i> Watch Now
+                    </button>
+                    <div class="hidden md:flex gap-2">
+                        <button onclick="changeSlide(-1)" class="w-12 h-12 rounded-xl glass-panel flex items-center justify-center hover:bg-white/20 transition"><i class="fas fa-chevron-left"></i></button>
+                        <button onclick="changeSlide(1)" class="w-12 h-12 rounded-xl glass-panel flex items-center justify-center hover:bg-white/20 transition"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2 mt-8" id="slider-dots"></div>
+        </div>
+    </div>
+
+    <div id="main-container" class="relative z-20 px-6 md:px-16 space-y-12 pb-24 -mt-10"></div>
+
+    <footer class="relative z-20 bg-black/80 border-t border-white/10 backdrop-blur-md mt-20 py-10">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+        
+        <div class="text-center md:text-left">
+            <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">MovieVibe</h2>
+            <p class="text-sm text-gray-400 mt-1">
+                Managed by <span class="text-blue-400 font-bold glow-text">Vibe Team</span>
+            </p>
+            <p class="text-xs text-gray-600 mt-2">© 2025 All rights reserved.</p>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-6 text-sm font-medium text-gray-400">
+            <a href="dmca.html" class="hover:text-white transition hover:underline">DMCA</a>
+            <a href="#" class="hover:text-white transition hover:underline">Privacy Policy</a>
+            <a href="#" class="hover:text-white transition hover:underline">Terms of Service</a>
+        </div>
+
+        <div>
+            <a href="https://t.me/movievibe0p" target="_blank" 
+               class="flex items-center gap-3 bg-[#229ED9]/10 border border-[#229ED9]/30 px-6 py-2.5 rounded-full hover:bg-[#229ED9]/20 transition-all group">
+                <i class="fab fa-telegram text-2xl text-[#229ED9] group-hover:scale-110 transition"></i>
+                <div class="flex flex-col items-start">
+                    <span class="text-[10px] text-[#229ED9] uppercase font-bold tracking-wider">Join us on</span>
+                    <span class="text-sm font-bold text-white leading-none">Telegram</span>
+                </div>
+            </a>
+        </div>
+
+    </div>
+</footer>
+
+    <script>
+        let allContent = [], sliderItems = [], currentSlide = 0, sliderInterval;
+
+        async function loadData() {
+            try {
+                const res = await fetch('/api/contents');
+                allContent = await res.json();
+                sliderItems = allContent.slice(0, 6);
+                initSlider();
+                renderApp('all'); 
+            } catch(e) { console.error(e); }
+        }
+
+        function initSlider() {
+            if(!sliderItems.length) return;
+            const dots = document.getElementById('slider-dots');
+            dots.innerHTML = sliderItems.map((_, i) => `<div class="h-1 rounded-full transition-all duration-300 bg-white/30 cursor-pointer ${i===0?'w-8 bg-white':'w-2'}" onclick="manualSlide(${i})"></div>`).join('');
+            showSlide(0);
+            startTimer();
+        }
+
+        function showSlide(index) {
+            if(!sliderItems.length) return;
+            if(index >= sliderItems.length) index = 0; if(index < 0) index = sliderItems.length - 1;
+            currentSlide = index; const item = sliderItems[currentSlide];
+            document.getElementById('hero').style.backgroundImage = `url('${item.backdropPath}')`;
+            document.getElementById('hero-title').innerText = item.title;
+            document.getElementById('hero-desc').innerText = item.overview;
+            document.getElementById('hero-play').onclick = () => window.location.href = `movie.html?id=${item._id}`;
+            const dotElements = document.getElementById('slider-dots').children;
+            for(let d of dotElements) d.className = "h-1 w-2 rounded-full bg-white/30 transition-all duration-300 cursor-pointer";
+            if(dotElements[currentSlide]) dotElements[currentSlide].className = "h-1 w-8 rounded-full bg-white transition-all duration-300 cursor-pointer";
+        }
+
+        function changeSlide(d) { clearInterval(sliderInterval); showSlide(currentSlide + d); startTimer(); }
+        function manualSlide(i) { clearInterval(sliderInterval); showSlide(i); startTimer(); }
+        function startTimer() { sliderInterval = setInterval(() => showSlide(currentSlide + 1), 6000); }
+
+        function renderApp(filter) {
+            const container = document.getElementById('main-container');
+            container.innerHTML = '';
+            
+            // Fix: Active Tab UI for Desktop & Mobile
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link-mob').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`btn-${filter}`)?.classList.add('active');
+            document.getElementById(`mob-btn-${filter}`)?.classList.add('active');
+
+            const databaseCategories = [...new Set(allContent.map(item => item.category))];
+
+            const renderRow = (title, items) => {
+                if (!items.length) return;
+                container.innerHTML += `
+                    <div class="group animate-fade-in-up">
+                        <h2 class="text-xl font-semibold text-gray-300 mb-4 px-1 border-l-4 border-transparent group-hover:border-white transition-all duration-300 group-hover:text-white cursor-pointer">${title}</h2>
+                        <div class="flex overflow-x-auto gap-4 md:gap-8 pb-10 hide-scroll scroll-smooth pl-1">
+                            ${items.map(c => `
+                                <div class="apple-card min-w-[140px] md:min-w-[240px] rounded-2xl bg-zinc-900 cursor-pointer aspect-[2/3] overflow-hidden shadow-2xl" onclick="window.location.href='movie.html?id=${c._id}'">
+                                    <img src="${c.posterPath}" class="w-full h-full object-cover rounded-2xl">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 hover:opacity-100 transition p-4 flex flex-col justify-end">
+                                        <h3 class="text-white font-bold text-xs text-center line-clamp-2">${c.title}</h3>
+                                    </div>
+                                </div>`).join('')}
+                        </div>
+                    </div>`;
+            };
+
+            if (filter === 'Anime') renderRow('Anime World', allContent.filter(c => c.category?.toLowerCase().includes('anime')));
+            else if (filter === 'K-Drama') renderRow('K-Drama Zone', allContent.filter(c => c.category?.toLowerCase().includes('drama')));
+            else {
+                databaseCategories.forEach(cat => {
+                    if(!cat || cat === 'Auto') return;
+                    let data = allContent.filter(c => c.category === cat);
+                    if(filter === 'movie') data = data.filter(c => c.type === 'movie');
+                    if(filter === 'series') data = data.filter(c => c.type === 'series');
+                    renderRow(cat, data);
+                });
+            }
+        }
+
+        function showSuggestions(q) {
+            const boxes = [document.getElementById('suggestion-box-desk'), document.getElementById('suggestion-box-mob')];
+            q = q.toLowerCase().trim();
+            boxes.forEach(box => {
+                if(!box) return; if(q.length < 2) return box.classList.add('hidden');
+                const matches = allContent.filter(c => c.title.toLowerCase().includes(q)).slice(0, 5);
+                if(matches.length) {
+                    box.innerHTML = matches.map(m => `<div onclick="window.location.href='movie.html?id=${m._id}'" class="flex items-center gap-4 p-4 border-b border-white/5 cursor-pointer hover:bg-white/10 transition">
+                        <img src="${m.posterPath}" class="w-10 h-14 object-cover rounded-lg shadow-xl">
+                        <div class="flex-1 min-w-0"><h4 class="text-sm font-bold truncate text-white">${m.title}</h4><span class="text-[10px] text-gray-500 uppercase font-bold">${m.type}</span></div>
+                    </div>`).join('');
+                    box.classList.remove('hidden');
+                } else box.classList.add('hidden');
+            });
+        }
+        window.addEventListener('click', (e) => { if(!e.target.closest('input')) document.querySelectorAll('[id^=suggestion-box]').forEach(b => b.classList.add('hidden')); });
+
+        loadData();
+    </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DMCA - MovieVibe</title>
+    <style>
+        /* Base Reset & Apple Font */
+        :root {
+            --bg-color: #000000;
+            --card-bg: rgba(28, 28, 30, 0.65);
+            --text-primary: #f5f5f7;
+            --text-secondary: #86868b;
+            --accent-blue: #2997ff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            /* Optional: Add a subtle background gradient like Apple TV */
+            background: radial-gradient(circle at top right, #1c1c1e 0%, #000000 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Card (Apple TV Style) */
+        .tv-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 40px 20px;
+            background: var(--card-bg);
+            backdrop-filter: blur(50px); /* The Frosted Effect */
+            -webkit-backdrop-filter: blur(50px);
+            border-radius: 24px;
+            padding: 60px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        p, li {
+            font-size: 17px;
+            line-height: 1.6;
+            color: var(--text-secondary); /* Grey text for easier reading */
+            margin-bottom: 20px;
+        }
+
+        ul {
+            list-style-type: none; /* Clean list */
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            border-left: 2px solid var(--accent-blue); /* Subtle blue indicator */
+        }
+
+        /* Email Button Style */
+        .contact-box {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .email-link {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 18px;
+            transition: opacity 0.3s ease;
+        }
+
+        .email-link:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        /* Footer Disclaimer */
+        .footer-note {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+            color: #515155;
+            text-align: center;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .tv-container {
+                padding: 30px;
+                margin: 20px;
+                border-radius: 16px;
+            }
+            h1 { font-size: 32px; }
+            h2 { font-size: 20px; }
+            p, li { font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tv-container">
+        <h1>DMCA Disclaimer</h1>
+        
+        <p>
+            MovieVibe respects the intellectual property rights of others and expects its users to do the same. 
+            All the content available on this website (MovieVibe) is not hosted on our own servers. We do not own, create, or upload any movies or media files. 
+            All the content provided on this website is already available on the internet and is collected from publicly accessible sources.
+        </p>
+        <p>
+            MovieVibe only provides links to third-party websites for streaming or downloading purposes. We do not control or take responsibility for the content hosted on those external websites.
+        </p>
+
+        <h2>Copyright Infringement Notification</h2>
+        <p>If you are a copyright owner or an agent thereof, and you believe that any content available on MovieVibe infringes your copyrights, please notify us immediately with the following information:</p>
+        
+        <ul>
+            <li>Your full name and company name (if applicable)</li>
+            <li>Proof of ownership of the copyrighted content</li>
+            <li>The URL(s) of the allegedly infringing content</li>
+            <li>A statement that you have a good-faith belief that the use of the material is not authorized</li>
+            <li>A statement that the information provided is accurate and under penalty of perjury</li>
+            <li>Your contact information (email address)</li>
+        </ul>
+
+        <p>Upon receiving a valid DMCA complaint, we will remove the content or disable access to it as quickly as possible.</p>
+
+        <div class="contact-box">
+            <span style="color: var(--text-secondary); display: block; margin-bottom: 8px;">Contact Email</span>
+            <a href="mailto:support@movievibe.xyz" class="email-link">support@movievibe.xyz</a>
+        </div>
+
+        <div class="footer-note">
+            MovieVibe does not host any files on its servers. All content is provided by non-affiliated third parties.
+        </div>
+    </div>
+
+</body>
+</html>

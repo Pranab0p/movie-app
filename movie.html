@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch - StreamHub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #000; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; }
+        
+        /* Glass Effect Utilities */
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .glass-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .glass-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Apple Card Style for Related Movies */
+        .apple-card {
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+        }
+        .apple-card:hover {
+            transform: scale(1.05);
+            z-index: 20;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .apple-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent);
+            transform: skewX(-25deg);
+            transition: 0.5s;
+        }
+        .apple-card:hover::after {
+            left: 150%;
+            transition: 0.7s ease-in-out;
+        }
+
+        /* Ambient Background Animation */
+        #ambient-bg {
+            transition: background-image 1s ease-in-out;
+        }
+        
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen relative">
+
+    <div id="ambient-bg" class="fixed inset-0 w-full h-full bg-cover bg-center opacity-30 blur-3xl scale-110 -z-10"></div>
+    <div class="fixed inset-0 bg-gradient-to-t from-black via-black/80 to-black/40 -z-10"></div>
+
+    <nav class="fixed top-4 left-1/2 transform -translate-x-1/2 w-[90%] max-w-7xl z-50 glass-panel rounded-2xl px-6 py-4 flex items-center gap-4 shadow-2xl">
+        <a href="/" class="glass-button w-10 h-10 rounded-full flex items-center justify-center text-white hover:text-red-400 transition">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="text-lg font-bold tracking-wide text-gray-200">StreamHub Player</h1>
+    </nav>
+
+    <div class="pt-28 pb-10 px-4 md:px-10 max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8">
+        
+        <div class="flex-1 w-full space-y-8">
+            
+            <div class="w-full aspect-video rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/10 relative group bg-black">
+                <iframe id="player" class="w-full h-full" src="" frameborder="0" allowfullscreen></iframe>
+                
+                <div id="placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/90 z-10 p-4 text-center">
+                    <div class="w-20 h-20 rounded-full border-2 border-white/20 flex items-center justify-center animate-pulse">
+                        <i class="fas fa-play text-4xl text-white/50 ml-2"></i>
+                    </div>
+                    <p class="text-gray-400 mt-4 font-light">Loading Stream...</p>
+                </div>
+            </div>
+
+            <div class="glass-panel p-8 rounded-3xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-red-600/10 blur-3xl rounded-full -mr-16 -mt-16"></div>
+
+                <div class="relative z-10">
+                    <div class="flex flex-wrap items-center gap-3 mb-4">
+                        <span id="badge-type" class="glass-button px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider text-blue-300">Movie</span>
+                        <span id="badge-cat" class="glass-button px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider text-purple-300">Genre</span>
+                        <span class="text-gray-400 text-sm ml-2"><i class="fas fa-calendar-alt mr-2"></i><span id="releaseYear">Year</span></span>
+                    </div>
+
+                    <h1 id="title" class="text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Loading Title...</h1>
+                    
+                    <p id="desc" class="text-gray-300 text-lg leading-relaxed font-light opacity-90"></p>
+
+                    <div class="mt-8 flex flex-wrap gap-4" id="actionButtons">
+                        </div>
+                </div>
+            </div>
+
+            <div id="batchDownloads" class="hidden glass-panel p-6 rounded-2xl border-l-4 border-yellow-500">
+                <h3 class="text-yellow-400 font-bold mb-4 flex items-center gap-3">
+                    <i class="fas fa-box-open text-xl"></i> 
+                    <span class="uppercase tracking-widest text-sm">Full Season Batch (Zip)</span>
+                </h3>
+                <div class="flex flex-wrap gap-3" id="batchButtons"></div>
+            </div>
+
+            <div class="pt-8">
+                <h2 class="text-2xl font-bold mb-6 text-gray-200">You Might Also Like</h2>
+                <div id="relatedGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
+                    </div>
+            </div>
+        </div>
+
+        <div id="seriesPanel" class="w-full lg:w-[400px] hidden animate-fade-in-right">
+            <div class="glass-panel rounded-3xl overflow-hidden sticky top-28 h-[calc(100vh-140px)] flex flex-col">
+                <div class="p-6 border-b border-white/10 bg-white/5">
+                    <h3 class="font-bold text-xl flex items-center gap-2">
+                        <i class="fas fa-list-ul text-gray-400"></i> Episodes
+                    </h3>
+                </div>
+                <div id="episodeList" class="p-4 space-y-2 overflow-y-auto custom-scroll flex-1">
+                    </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+
+        async function loadContent() {
+            if(!id) return;
+            try {
+                const res = await fetch(`/api/content/${id}`);
+                const data = await res.json();
+
+                // 1. Set Ambient Background
+                if(data.backdropPath) {
+                    document.getElementById('ambient-bg').style.backgroundImage = `url('${data.backdropPath}')`;
+                }
+
+                // 2. Populate Text
+                document.getElementById('title').innerText = data.title;
+                document.getElementById('desc').innerText = data.overview;
+                document.getElementById('badge-type').innerText = data.type === 'series' ? 'Web Series' : 'Movie';
+                document.getElementById('badge-cat').innerText = data.category || 'General';
+                document.getElementById('releaseYear').innerText = data.releaseDate ? data.releaseDate.split('-')[0] : 'N/A';
+
+                // 3. Logic: Movie vs Series
+                if (data.type === 'movie') {
+                    document.getElementById('placeholder').style.display = 'none';
+                    document.getElementById('player').src = data.streamLink;
+                    
+                    const div = document.getElementById('actionButtons');
+                    if(data.download480) div.innerHTML += btn(data.download480, '480p');
+                    if(data.download720) div.innerHTML += btn(data.download720, '720p'); // Highlighted
+                    if(data.download1080) div.innerHTML += btn(data.download1080, '1080p');
+                } else {
+                    document.getElementById('seriesPanel').classList.remove('hidden');
+                    
+                    // Batch Links
+                    const batchContainer = document.getElementById('batchDownloads');
+                    const batchBtns = document.getElementById('batchButtons');
+                    let hasBatch = false;
+                    [data.batchLink1, data.batchLink2, data.batchLink3, data.batchLink4].forEach((link, i) => {
+                        if(link) {
+                            batchBtns.innerHTML += `<a href="${link}" target="_blank" class="glass-button px-4 py-2 rounded-lg text-sm text-yellow-200 hover:bg-yellow-500/20"><i class="fas fa-file-archive mr-2"></i>Link ${i+1}</a>`;
+                            hasBatch = true;
+                        }
+                    });
+                    if(hasBatch) batchContainer.classList.remove('hidden');
+
+                    // Episode List
+                    const list = document.getElementById('episodeList');
+                    data.episodes.forEach((ep, index) => {
+                        const div = document.createElement('div');
+                        div.className = "flex justify-between items-center p-4 rounded-xl hover:bg-white/10 transition cursor-pointer group border border-transparent hover:border-white/10";
+                        div.innerHTML = `
+                            <div class="flex items-center gap-4 overflow-hidden" onclick="playEpisode('${ep.streamLink}')">
+                                <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-xs font-bold text-gray-400 group-hover:bg-red-600 group-hover:text-white transition shadow-inner">${index+1}</div>
+                                <div class="flex flex-col truncate">
+                                    <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">S${ep.season} E${ep.episode}</span>
+                                    <span class="text-sm font-medium truncate text-gray-200 group-hover:text-white">Episode ${index+1}</span>
+                                </div>
+                            </div>
+                            ${ep.downloadLink ? `<a href="${ep.downloadLink}" target="_blank" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 text-gray-400 hover:text-green-400 transition"><i class="fas fa-download text-xs"></i></a>` : ''}
+                        `;
+                        list.appendChild(div);
+                    });
+                }
+                
+                // 4. Load Related
+                loadRelated(data.category, data._id);
+
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadRelated(category, currentId) {
+            try {
+                const res = await fetch('/api/contents');
+                const all = await res.json();
+                const related = all.filter(c => c.category === category && c._id !== currentId).slice(0, 5);
+                
+                const grid = document.getElementById('relatedGrid');
+                if(related.length === 0) grid.innerHTML = '<p class="text-gray-500 italic">No related content found.</p>';
+                
+                related.forEach(c => {
+                    grid.innerHTML += `
+                        <div class="apple-card rounded-xl bg-gray-800 aspect-[2/3] cursor-pointer shadow-lg" onclick="window.location.href='movie.html?id=${c._id}'">
+                            <img src="${c.posterPath}" class="w-full h-full object-cover opacity-80 hover:opacity-100 transition">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent flex items-end p-3 opacity-0 hover:opacity-100 transition duration-300">
+                                <p class="text-xs font-bold text-center w-full">${c.title}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch(err) {}
+        }
+
+        function playEpisode(link) {
+            document.getElementById('placeholder').style.display = 'none';
+            document.getElementById('player').src = link;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function btn(link, label, primary=false) {
+            const style = primary 
+                ? "bg-white text-black hover:bg-gray-200 shadow-[0_0_15px_rgba(255,255,255,0.4)] border-transparent" 
+                : "glass-button text-white hover:bg-white/10";
+                
+            return `<a href="${link}" target="_blank" class="${style} px-6 py-3 rounded-xl font-bold transition flex items-center gap-2">
+                <i class="fas fa-download"></i> ${label}
+            </a>`;
+        }
+
+        loadContent();
+    </script>
+
+    <footer class="relative z-20 bg-black/80 border-t border-white/10 backdrop-blur-md mt-20 py-10">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+        
+        <div class="text-center md:text-left">
+            <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">MovieVibe</h2>
+            <p class="text-sm text-gray-400 mt-1">
+                Managed by <span class="text-blue-400 font-bold glow-text">Vibe Team</span>
+            </p>
+            <p class="text-xs text-gray-600 mt-2">© 2025 All rights reserved.</p>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-6 text-sm font-medium text-gray-400">
+            <a href="dmca.html" class="hover:text-white transition hover:underline">DMCA</a>
+            <a href="#" class="hover:text-white transition hover:underline">Privacy Policy</a>
+            <a href="#" class="hover:text-white transition hover:underline">Terms of Service</a>
+        </div>
+
+        <div>
+            <a href="https://t.me/movievibe0p" target="_blank" 
+               class="flex items-center gap-3 bg-[#229ED9]/10 border border-[#229ED9]/30 px-6 py-2.5 rounded-full hover:bg-[#229ED9]/20 transition-all group">
+                <i class="fab fa-telegram text-2xl text-[#229ED9] group-hover:scale-110 transition"></i>
+                <div class="flex flex-col items-start">
+                    <span class="text-[10px] text-[#229ED9] uppercase font-bold tracking-wider">Join us on</span>
+                    <span class="text-sm font-bold text-white leading-none">Telegram</span>
+                </div>
+            </a>
+        </div>
+
+    </div>
+</footer>
+</body>
+</html>

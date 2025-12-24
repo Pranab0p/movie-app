@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background: #0f172a; color: white; }</style>
+</head>
+<body class="h-screen flex items-center justify-center">
+
+    <div class="bg-slate-800 p-8 rounded-xl shadow-2xl border border-slate-700 w-96 text-center">
+        <h2 class="text-2xl font-bold mb-6 text-blue-500">🔒 Admin Access</h2>
+        
+        <form id="loginForm" class="space-y-4">
+            <input type="password" id="password" placeholder="Enter Password" required
+                class="w-full p-3 rounded bg-slate-900 border border-slate-600 focus:outline-none focus:border-blue-500 text-center">
+            
+            <button type="submit" 
+                class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded font-bold transition">
+                UNLOCK PANEL
+            </button>
+        </form>
+        
+        <p id="msg" class="mt-4 text-sm text-red-400 font-semibold"></p>
+        <a href="/" class="block mt-4 text-gray-400 text-xs hover:text-white">← Back to Home</a>
+    </div>
+
+    <script>
+        // Agar pehle se login hai, toh seedha admin panel bhejo
+        if(localStorage.getItem('admin_token')) {
+            window.location.href = 'admin.html';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            const msg = document.getElementById('msg');
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const data = await res.json();
+
+                if(data.success) {
+                    // Token save karo browser mein
+                    localStorage.setItem('admin_token', data.token);
+                    msg.className = "text-green-400 mt-4";
+                    msg.innerText = "✅ Access Granted!";
+                    setTimeout(() => window.location.href = 'admin.html', 1000);
+                } else {
+                    msg.innerText = "❌ " + data.msg;
+                }
+            } catch (error) {
+                msg.innerText = "Server Error";
+            }
+        });
+    </script>
+</body>
+</html>

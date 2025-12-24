@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieVibe Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Background color thoda aur dark kiya hai professional look ke liye */
+        body { background-color: #0b1120; color: white; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #3b82f6; borderRadius: 10px; }
+    </style>
+    <script>
+        // Security Check (Agar login nahi hai to bahar fenko)
+        if(!localStorage.getItem('admin_token')) {
+             window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body class="h-screen flex flex-col overflow-hidden font-sans">
+
+    <nav class="bg-slate-950 border-b border-slate-800 p-4 flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="bg-red-600 w-10 h-10 flex items-center justify-center rounded-lg shadow-lg shadow-red-900/50">
+                <i class="fas fa-play text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-black tracking-wider text-white leading-none">MovieVibe</h1>
+                <span class="text-xs text-blue-400 font-bold uppercase tracking-widest">Super Admin Panel</span>
+            </div>
+        </div>
+
+        <button onclick="logout()" class="bg-slate-800 hover:bg-red-700 border border-slate-700 text-gray-300 hover:text-white px-4 py-2 rounded-md text-sm font-bold flex items-center gap-2 transition-all duration-300 group">
+            <span>Logout</span>
+            <i class="fas fa-sign-out-alt group-hover:translate-x-1 transition-transform"></i>
+        </button>
+    </nav>
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <div class="w-1/3 bg-[#0f172a] border-r border-slate-800 flex flex-col">
+            <div class="p-4 border-b border-slate-800 bg-[#131c31]">
+                <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Content Library</h2>
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-500"></i>
+                    <input type="text" id="searchBox" placeholder="Search movies & series..." 
+                        class="w-full pl-10 p-2.5 bg-slate-800 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none text-sm transition-colors" 
+                        onkeyup="renderList()">
+                </div>
+            </div>
+            <div id="contentList" class="flex-1 overflow-y-auto custom-scroll p-3 space-y-2">
+                </div>
+        </div>
+
+        <div class="w-2/3 p-8 overflow-y-auto custom-scroll bg-[#0b1120]">
+            <div class="max-w-3xl mx-auto">
+                <div class="flex justify-between items-center mb-8 pb-4 border-b border-slate-800">
+                    <div>
+                        <h1 class="text-3xl font-bold text-white" id="formTitle">Add New Content</h1>
+                        <p class="text-gray-400 text-sm mt-1">Create movies or web series entries.</p>
+                    </div>
+                    <button onclick="resetForm()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-blue-900/30 transition-all active:scale-95 flex items-center gap-2">
+                        <i class="fas fa-plus"></i> New Entry
+                    </button>
+                </div>
+
+                <form id="contentForm" class="bg-[#131c31] p-8 rounded-2xl border border-slate-800 shadow-2xl space-y-6">
+                    <input type="hidden" id="editId">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">TMDB ID</label>
+                            <input type="text" id="tmdbId" required placeholder="e.g. 12345"
+                                class="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 focus:border-blue-500 outline-none transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Content Type</label>
+                            <select id="contentType" class="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 focus:border-blue-500 outline-none transition-colors appearance-none cursor-pointer" onchange="toggleType()">
+                                <option value="movie">Movie</option>
+                                <option value="series">Web Series</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Category</label>
+                        <select id="category" class="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 focus:border-blue-500 outline-none transition-colors appearance-none cursor-pointer">
+                            <option>Action</option><option>Adventure</option><option>Comedy</option>
+                            <option>Drama</option><option>Romance</option><option>Thriller</option>
+                            <option>Horror</option><option>Mystery</option><option>Crime</option>
+                            <option>Fantasy</option><option>Science Fiction (Sci-Fi)</option>
+                            <option>Animation</option><option>Family</option><option>Hindi Dubbed</option>
+                            <option>18+</option><option>Biography (Biopic)</option><option>Documentary</option>
+                            <option>Anime</option>
+                            <option>K Drama Hindi Dub</option>  
+                        </select>
+                    </div>
+
+                    <div id="movieFields" class="space-y-6 animate-fade-in">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Main Stream Link</label>
+                            <input type="url" id="streamLink" placeholder="https://..." class="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 focus:border-blue-500 outline-none">
+                        </div>
+                        
+                        <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                            <h3 class="text-sm font-bold text-gray-300 mb-4 flex items-center gap-2">
+                                <i class="fas fa-download text-blue-500"></i> Download Links
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <input type="url" id="d480" placeholder="480p Link" class="p-3 rounded-lg bg-slate-900 border border-slate-700 focus:border-blue-500 outline-none text-sm">
+                                <input type="url" id="d720" placeholder="720p Link" class="p-3 rounded-lg bg-slate-900 border border-slate-700 focus:border-blue-500 outline-none text-sm">
+                                <input type="url" id="d1080" placeholder="1080p Link" class="p-3 rounded-lg bg-slate-900 border border-slate-700 focus:border-blue-500 outline-none text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="seriesFields" class="hidden space-y-6 animate-fade-in">
+                        <div class="bg-slate-900/50 p-5 rounded-xl border border-slate-800 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-2">
+                                <i class="fas fa-file-archive text-6xl text-yellow-500/10 transform rotate-12"></i>
+                            </div>
+                            <h3 class="font-bold mb-4 text-sm text-yellow-400 uppercase tracking-wider flex items-center gap-2 relative z-10">
+                                <i class="fas fa-box-archive"></i> Batch / Zip Season Downloads
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                                <input type="url" id="b1" placeholder="Link 1 (e.g. 480p Zip)" class="p-3 rounded-lg bg-slate-900 border border-slate-700 focus:border-yellow-500/50 outline-none text-sm">
+                                <input type="url" id="b2" placeholder="Link 2 (e.g. 720p Zip)" class="p-3 rounded-lg bg-slate-900 border border-slate-700 focus:border-yellow-500/50 outline-none text-sm">
+                                <input type="url" id="b3" placeholder="Link 3 (e.g. 1080p Zip)" class="p-3 rounded-lg bg-slate-900 border border-slate-700 focus:border-yellow-500/50 outline-none text-sm">
+                                <input type="url" id="b4" placeholder="Link 4 (e.g. Mirror)" class="p-3 rounded-lg bg-slate-900 border border-slate-700 focus:border-yellow-500/50 outline-none text-sm">
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
+                                <h3 class="font-bold text-lg flex items-center gap-2">
+                                    <i class="fas fa-list-ol text-gray-400"></i> Episodes
+                                </h3>
+                                <button type="button" onclick="addEpisodeInput()" class="text-xs bg-green-600/20 text-green-400 hover:bg-green-600/40 px-3 py-1.5 rounded-full font-bold transition flex items-center gap-1">
+                                    <i class="fas fa-plus"></i> Add Episode
+                                </button>
+                            </div>
+                            <div id="episodeContainer" class="space-y-3 max-h-[400px] overflow-y-auto custom-scroll pr-2">
+                                </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-900/30 transition-all active:scale-[0.98] text-lg flex items-center justify-center gap-2">
+                        <i class="fas fa-save"></i> SAVE CONTENT
+                    </button>
+                    <p id="msg" class="text-center text-sm font-medium h-5"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allContent = [];
+        const API = '/api';
+
+        // Logout Function
+        function logout() {
+            if(confirm("Are you sure you want to logout?")) {
+                localStorage.removeItem('admin_token');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // --- BAAKI KA PURANA JAVASCRIPT LOGIC SAME RAHEGA ---
+        // (Load Content, Render List, Add/Edit Logic, etc.)
+        
+        async function loadContent() {
+            const res = await fetch(`${API}/contents`);
+            allContent = await res.json();
+            renderList();
+        }
+
+        function renderList() {
+            const list = document.getElementById('contentList');
+            const query = document.getElementById('searchBox').value.toLowerCase();
+            list.innerHTML = '';
+            const filtered = allContent.filter(c => c.title.toLowerCase().includes(query));
+            filtered.forEach(c => {
+                list.innerHTML += `
+                    <div class="bg-[#131c31] p-2.5 rounded-xl flex gap-3 mb-2 relative group cursor-pointer hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition-all">
+                        <img src="${c.posterPath}" class="w-12 h-16 object-cover rounded-lg shadow-sm">
+                        <div class="flex-1 overflow-hidden flex flex-col justify-center">
+                            <h4 class="font-bold text-sm text-gray-200 truncate">${c.title}</h4>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[10px] uppercase font-bold ${c.type==='movie'?'bg-blue-900/50 text-blue-200':'bg-purple-900/50 text-purple-200'} px-2 py-0.5 rounded-full border ${c.type==='movie'?'border-blue-800':'border-purple-800'}">${c.type}</span>
+                                <span class="text-[10px] text-gray-500 truncate">${c.category}</span>
+                            </div>
+                        </div>
+                        <div class="hidden group-hover:flex gap-1 absolute right-2 top-2 bg-[#131c31]/90 p-1 rounded-lg backdrop-blur-sm shadow-sm border border-slate-700">
+                            <button onclick='editContent(${JSON.stringify(c).replace(/'/g, "")})' class="w-8 h-8 flex items-center justify-center rounded-md text-blue-400 hover:bg-blue-600/20 transition"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteContent('${c._id}')" class="w-8 h-8 flex items-center justify-center rounded-md text-red-400 hover:bg-red-600/20 transition"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function toggleType() {
+            const type = document.getElementById('contentType').value;
+            if (type === 'series') {
+                document.getElementById('movieFields').classList.add('hidden');
+                document.getElementById('seriesFields').classList.remove('hidden');
+            } else {
+                document.getElementById('movieFields').classList.remove('hidden');
+                document.getElementById('seriesFields').classList.add('hidden');
+            }
+        }
+
+        function addEpisodeInput(s="", e="", link="", dl="") {
+            const div = document.createElement('div');
+            div.className = "flex gap-3 episode-row items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800 group animate-fade-in";
+            div.innerHTML = `
+                <div class="flex gap-2">
+                    <input type="text" placeholder="S1" class="w-12 p-2.5 bg-slate-900 rounded-lg border border-slate-700 focus:border-blue-500 outline-none text-sm text-center font-bold ep-season" value="${s}">
+                    <input type="text" placeholder="E1" class="w-12 p-2.5 bg-slate-900 rounded-lg border border-slate-700 focus:border-blue-500 outline-none text-sm text-center font-bold ep-num" value="${e}">
+                </div>
+                <input type="text" placeholder="Stream Link (Embed)" class="flex-1 p-2.5 bg-slate-900 rounded-lg border border-slate-700 focus:border-blue-500 outline-none text-sm ep-link" value="${link}">
+                <input type="text" placeholder="Download Link" class="flex-1 p-2.5 bg-slate-900 rounded-lg border border-slate-700 focus:border-blue-500 outline-none text-sm ep-dl" value="${dl}">
+                <button type="button" onclick="this.parentElement.remove()" class="w-10 h-10 flex items-center justify-center rounded-lg text-gray-500 hover:text-red-500 hover:bg-red-500/10 transition opacity-50 group-hover:opacity-100"><i class="fas fa-times"></i></button>
+            `;
+            document.getElementById('episodeContainer').appendChild(div);
+        }
+
+        document.getElementById('contentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('msg');
+            msg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...'; msg.className = "text-center text-sm font-medium h-5 text-yellow-400";
+
+            const type = document.getElementById('contentType').value;
+            let episodes = [];
+            if(type === 'series') {
+                document.querySelectorAll('.episode-row').forEach(row => {
+                    episodes.push({
+                        season: row.querySelector('.ep-season').value,
+                        episode: row.querySelector('.ep-num').value,
+                        streamLink: row.querySelector('.ep-link').value,
+                        downloadLink: row.querySelector('.ep-dl').value
+                    });
+                });
+            }
+
+            const payload = {
+                id: document.getElementById('editId').value,
+                tmdbId: document.getElementById('tmdbId').value,
+                type,
+                category: document.getElementById('category').value,
+                streamLink: document.getElementById('streamLink').value,
+                d480: document.getElementById('d480').value,
+                d720: document.getElementById('d720').value,
+                d1080: document.getElementById('d1080').value,
+                b1: document.getElementById('b1').value,
+                b2: document.getElementById('b2').value,
+                b3: document.getElementById('b3').value,
+                b4: document.getElementById('b4').value,
+                episodes
+            };
+
+            try {
+                const res = await fetch(`${API}/add-content`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                if(res.ok) { 
+                    msg.innerHTML = '<i class="fas fa-check-circle"></i> Saved Successfully!'; msg.className = "text-center text-sm font-medium h-5 text-green-400";
+                    loadContent(); 
+                    if(!payload.id) resetForm(); 
+                    setTimeout(() => msg.innerText = "", 3000);
+                } else { throw new Error(); }
+            } catch(e) {
+                 msg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error Occurred!'; msg.className = "text-center text-sm font-medium h-5 text-red-400";
+            }
+        });
+
+        function editContent(c) {
+            document.getElementById('formTitle').innerText = "Edit Content";
+            document.getElementById('editId').value = c._id;
+            document.getElementById('tmdbId').value = c.tmdbId;
+            document.getElementById('contentType').value = c.type;
+            document.getElementById('category').value = c.category;
+            toggleType();
+
+            if(c.type === 'series') {
+                document.getElementById('b1').value = c.batchLink1 || ""; document.getElementById('b2').value = c.batchLink2 || "";
+                document.getElementById('b3').value = c.batchLink3 || ""; document.getElementById('b4').value = c.batchLink4 || "";
+                document.getElementById('episodeContainer').innerHTML = "";
+                c.episodes.forEach(ep => addEpisodeInput(ep.season, ep.episode, ep.streamLink, ep.downloadLink));
+            } else {
+                document.getElementById('streamLink').value = c.streamLink || "";
+                document.getElementById('d480').value = c.download480 || "";
+                document.getElementById('d720').value = c.download720 || "";
+                document.getElementById('d1080').value = c.download1080 || "";
+            }
+             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById('contentForm').reset();
+            document.getElementById('editId').value = "";
+            document.getElementById('formTitle').innerText = "Add New Content";
+            document.getElementById('episodeContainer').innerHTML = "";
+            toggleType();
+        }
+
+        async function deleteContent(id) {
+            if(confirm("Are you sure you want to delete this content permanently?")) { await fetch(`${API}/content/${id}`, {method: 'DELETE'}); loadContent(); }
+        }
+
+        loadContent();
+    </script>
+</body>
+</html>
